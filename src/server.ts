@@ -21,7 +21,7 @@ import todoRoutes from './routes/todoRoutes';
 dotenv.config();
 dbConfig();
 const app = express();
-const port = 8086;
+const port = 80;
 
 app.use(cors());
 
