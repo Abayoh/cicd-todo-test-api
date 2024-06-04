@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: registry.abiemarket.com:5000/todo-backend-dev
+  repository: registry.abiemarket.com:5000/cicd-todo-test:dev
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "development"
