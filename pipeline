@@ -1,0 +1,78 @@
+pipeline {
+    agent any
+
+    environment {
+        // Replace with your actual Docker registry credentials ID
+        DOCKER_REGISTRY_CREDENTIALS_ID = 'docker-registry-credentials-id'
+        // Replace with your actual Docker registry URL
+        DOCKER_REGISTRY_URL = 'https://registry.abiemarket.com:5000'
+        // Replace with your Docker registry repository (e.g., 'myuser/myrepo')
+        DOCKER_REPOSITORY = 'abiemarket'
+        // Replace with your actual Kubernetes credentials ID
+        HELM_USER = 'helm-user'
+        KUBECONFIG_PATH = '/tmp/kubeconfig'
+        // Replace with your Kubernetes context (if needed)
+        //KUBERNETES_CONTEXT = 'your-kubernetes-context'
+        // Replace with your Helm chart name
+       HELM_CHART = './charts/backend-dev'
+        // Replace with your Helm release name
+        // = 'your-helm-release'
+        // Docker image that includes Helm CLI
+        //HELM_DOCKER_IMAGE = 'lachlanevenson/k8s-helm:v3.5.4'
+    }
+
+    stages {
+       // stage('Clone Repository') {
+        //    steps {
+      //          git credentialsId: 'github_credential_ssh', url: 'git@github.com:Abayoh/cicd-todo-test-api.git'
+      //      }
+      //  }
+      
+      stage('Clone Repository') {
+            steps {
+                // Since the repository is public, no need for credentials
+                git url: 'https://github.com/Abayoh/cicd-todo-test-api.git', branch: 'main'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t registry.abiemarket.com:5000/cicd-todo-test:dev .'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    sh 'docker push registry.abiemarket.com:5000/cicd-todo-test:dev'
+                }
+            }
+        }
+        
+        
+        stage('Deploy with Helm') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: env.HELM_USER, variable: 'KUBECONFIG_CONTENT')]) {
+                        sh """
+                        echo "Setting up kubeconfig"
+                        cp $KUBECONFIG_CONTENT $KUBECONFIG_PATH
+                        export KUBECONFIG=$KUBECONFIG_PATH
+                        kubectl get pods
+                        helm upgrade --install --recreate-pods cicd-todo-dev ./charts/backend-dev --namespace default
+                        """
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+    
+}
