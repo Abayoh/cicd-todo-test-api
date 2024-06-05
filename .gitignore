@@ -131,3 +131,6 @@ dist
 
 # ignore the build directory
 build/
+
+#ignore kubernetes secrets
+secrets/
